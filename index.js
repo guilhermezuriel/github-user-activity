@@ -21,7 +21,6 @@ const fetchActivities = async (username) => {
 }
 
 function analizeActivities(actions){
-  console.log(actions)
   for(let action of actions){
     if(action.type === 'PushEvent'){
       console.log(color.green(`Pushed ${action.payload.commits.length} commits to ${action.payload.ref} at ${action.repo.name}`), color.white(`- ${formatDistanceToNow(action.created_at, {addSuffix: true})}`))
