@@ -38,10 +38,11 @@ function analizeActivities(actions){
 async function main() {
   p.intro('Welcome to Github Activity CLI', 'A CLI tool to get the latest activities of a Github user')
   const username = await p.text({message: 'Enter the Github username', placeholder: 'guilhermezuriel', defaultValue: 'guilhermezuriel'});
+  p.multiselect({message: 'Select the types of activities you want to see', options: [{value:'Push'}, {value:'Create'}, {value:'Watch'}], defaultValues: ['Push', 'Create', 'Watch']})
   console.log(color.bold(`Fetching the latest activities of ${username}...`))
-  const data = await fetchActivities(username);
-  analizeActivities(data);
-  p.outro('Thanks for using Github Activity CLI', 'Hope you liked it!')
+  // const data = await fetchActivities(username);
+  // analizeActivities(data);
+  // p.outro('Thanks for using Github Activity CLI', 'Hope you liked it!')
 }
 
 main();
