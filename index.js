@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import * as p from '@clack/prompts';
+import {log, intro, outro, spinner, multiselect, text, select } from '@clack/prompts';
 import { type } from 'os';
 import color from 'picocolors'
 import {setTimeout} from 'timers/promises';
@@ -23,26 +23,47 @@ const fetchActivities = async (username) => {
 function analizeActivities(actions){
   for(let action of actions){
     if(action.type === 'PushEvent'){
-      console.log(color.green(`Pushed ${action.payload.commits.length} commits to ${action.payload.ref} at ${action.repo.name}`), color.white(`- ${formatDistanceToNow(action.created_at, {addSuffix: true})}`))
+      log.step(color.green(`Pushed ${action.payload.commits.length} commits to ${action.payload.ref} at ${action.repo.name}`), color.white(`- ${formatDistanceToNow(action.created_at, {addSuffix: true})}`))
     }
     if(action.type === 'CreateEvent'){
-      console.log(color.green(`Created ${action.payload.ref_type} ${action.payload.ref} at ${action.repo.name}`))
+      log.step(color.green(`Created ${action.payload.ref_type} ${action.payload.ref} at ${action.repo.name}`))
     }
     if(action.type === 'WatchEvent'){
-      console.log(color.green(`Starred ${action.repo.name}`))
+      log.step(color.green(`Starred ${action.repo.name}`))
     }
 }
+}
+
+const userRepoRegex = /^([^/]+)/
+
+function extractRepoName(actions, username){
+  const repoNames = actions.map(action => action.repo.name).filter(user=> {
+    return user.match(userRepoRegex)[1] === username;
+  });
+  const uniqueRepoNames = [...new Set(repoNames)];
+  return uniqueRepoNames.map(repo => ({value: repo}));
 }
 
 
 async function main() {
-  p.intro('Welcome to Github Activity CLI', 'A CLI tool to get the latest activities of a Github user')
-  const multiselect = await p.multiselect({message: 'Select the types of activities you want to see', options: [{value:'public'}, {value:'private'}], defaultValues: ['public', 'private']});
-  if(multiselect.includes('public')){
-     const username = await p.text({message: 'Enter the Github username', placeholder: 'guilhermezuriel', defaultValue: 'guilhermezuriel'});
-     console.log(color.bold(`Fetching the latest public activities of ${username}...`))
+  intro('Welcome to Github Activity CLI', 'A CLI tool to get the latest activities of a Github user')
+  const choose = await select({message: 'Select the types of activities you want to see', options: [{value:'public'}, {value:'private'}], defaultValues: ['public', 'private']});
+  const s = spinner();
+  if(choose.includes('public')){
+     const username = await text({message: 'Enter the Github username', placeholder: 'guilhermezuriel', defaultValue: 'guilhermezuriel'});
+    
+     s.start(color.bold(`Fetching the latest public activities of ${username}...`));
      const data = await fetchActivities(username);
-     analizeActivities(data);
+     s.stop(); 
+     const selectType = await select({message: 'Select the type of activities you want to see', options: [{value:'all',label:'All activities'}, {value:'repo', label:'Repositorie activities'}, {value:'Last commits'}], defaultValue: 'All activities'});
+      if(selectType === 'all'){
+        analizeActivities(data);
+      }
+      if(selectType === 'repo'){
+        const latestRepo = extractRepoName(data, username);
+        const selectLatestRepos = await select({message: 'Select the repository you want to see the activities', options: latestRepo});
+        // const repoName = await text({message: 'Enter the repository name', placeholder: 'guilhermezuriel', defaultValue: 'guilhermezuriel'});
+      }
   }
 
 
@@ -50,7 +71,7 @@ async function main() {
 
   // const data = await fetchActivities(username);
   // analizeActivities(data);
-  p.outro('Thanks for using Github Activity CLI', 'Hope you liked it!')
+  outro('Thanks for using Github Activity CLI', 'Hope you liked it!')
 }
 
 /*
