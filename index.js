@@ -62,7 +62,8 @@ async function main() {
       if(selectType === 'repo'){
         const latestRepo = extractRepoName(data, username);
         const selectLatestRepos = await select({message: 'Select the repository you want to see the activities', options: latestRepo});
-        // const repoName = await text({message: 'Enter the repository name', placeholder: 'guilhermezuriel', defaultValue: 'guilhermezuriel'});
+        console.log(color.green(`Fetching the latest activities of ${selectLatestRepos}...`));
+        const filteredData = data.filter(action => action.repo.name === selectLatestRepos);
       }
   }
 
